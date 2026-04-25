@@ -1,0 +1,431 @@
+Build a complete full-stack MVP called "CITY WALLET" for the Hack-Nation × 
+World Bank Youth Summit Global AI Hackathon 2026.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WHAT TO BUILD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+An AI-powered city wallet app that:
+1. Fetches real-time context (weather, time, simulated merchant demand)
+2. Uses Google Gemini API to dynamically generate personalized local offers
+3. Lets users redeem offers via QR code with simulated checkout
+4. Shows merchants a live dashboard with performance metrics
+
+Demo scenario:
+- City: Stuttgart, Germany
+- User: Mia, walking in Altstadt at lunch
+- Context: 9°C + overcast + nearby café has low transaction volume
+- AI generates: "Cold outside? Your cappuccino awaits — 15% off"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TECH STACK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Frontend: React + Vite + Tailwind CSS + React Router
+Backend: Node.js + Express
+AI: Google Gemini API (gemini-1.5-flash model) via @google/generative-ai package
+Weather: OpenWeatherMap API (Stuttgart, lat=48.7758, lon=9.1829)
+QR Code: "qrcode" npm package
+Database: lowdb (simple JSON file db.json)
+Fonts: DM Sans + DM Serif Display from Google Fonts
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROJECT FILE STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+city-wallet/
+├── client/
+│   └── src/
+│       ├── App.jsx
+│       ├── main.jsx
+│       ├── index.css
+│       ├── views/
+│       │   ├── UserApp.jsx
+│       │   └── MerchantDashboard.jsx
+│       ├── components/
+│       │   ├── OfferCard.jsx
+│       │   ├── ContextStrip.jsx
+│       │   ├── QRModal.jsx
+│       │   ├── MetricCard.jsx
+│       │   └── TriggerLog.jsx
+│       └── api/
+│           └── cityWalletApi.js
+├── server/
+│   ├── index.js
+│   ├── routes/
+│   │   ├── context.js
+│   │   ├── offers.js
+│   │   ├── redeem.js
+│   │   └── merchant.js
+│   ├── services/
+│   │   ├── weatherService.js
+│   │   ├── geminiService.js
+│   │   ├── payoneSimulator.js
+│   │   └── qrService.js
+│   └── db.json
+├── .env
+└── package.json
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BACKEND: SERVER/INDEX.JS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Express server on PORT 3001
+- Enable CORS for frontend (port 5173)
+- Mount routes:
+  GET  /api/context
+  POST /api/offers/generate
+  GET  /api/offers
+  POST /api/redeem
+  POST /api/redeem/validate
+  GET  /api/merchant/dashboard
+  PUT  /api/merchant/rules
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BACKEND: SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+--- weatherService.js ---
+- Fetch from OpenWeatherMap:
+  URL: https://api.openweathermap.org/data/2.5/weather
+       ?lat=48.7758&lon=9.1829&appid=${OPENWEATHER_API_KEY}&units=metric
+- Return: { temp, condition, feelsLike }
+- If API fails, return fallback: { temp: 9, condition: "overcast", feelsLike: 6 }
+
+--- payoneSimulator.js ---
+- Simulate merchant transaction density
+- Generate random volume 20–80 for "cafe-muller"
+- If volume < 60: status = "low", else "normal"
+- Return: { merchantId, volume, status }
+
+--- geminiService.js ---
+- Import: import { GoogleGenerativeAI } from "@google/generative-ai"
+- Initialize: const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+- Use model: gemini-1.5-flash
+- Function generateOffer(contextState, merchantRules):
+
+  Send this prompt to Gemini:
+  "You are an AI offer generator for a city wallet app.
+   Generate a hyper-personalized offer based on this context.
+   Respond ONLY with a valid JSON object, no markdown, no explanation.
+   
+   Context: ${JSON.stringify(contextState)}
+   Merchant rules: ${JSON.stringify(merchantRules)}
+   
+   Return exactly this JSON structure:
+   {
+     headline: (max 8 words, emotional and situational),
+     subtext: (max 12 words, explains why this offer right now),
+     discountPercent: (number, within merchant maxDiscountPercent),
+     expiryMinutes: (number between 10-25),
+     tone: (warm or urgent or playful),
+     ctaText: (max 4 words)
+   }"
+
+- Parse response text as JSON
+- If parse fails, return fallback offer:
+  { headline: "Warm up with a cappuccino", subtext: "Cold outside, quiet café nearby",
+    discountPercent: 15, expiryMinutes: 20, tone: "warm", ctaText: "Claim offer" }
+
+--- qrService.js ---
+- Import qrcode and uuid packages
+- Function generateQR(offerId, userId):
+  - Create token string: offerId + "_" + uuid()
+  - Generate QR as base64 data URL using qrcode.toDataURL(token)
+  - Return: { token, qrDataUrl }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BACKEND: ROUTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GET /api/context:
+- Call weatherService + payoneSimulator
+- Return composite context:
+{
+  weather: { temp, condition, feelsLike },
+  location: { city: "Stuttgart", district: "Altstadt" },
+  time: { hour: new Date().getHours(), period: "lunch" },
+  merchantDemand: { merchantId: "cafe-muller", volume, status },
+  userBehavior: "browsing"
+}
+
+POST /api/offers/generate:
+- Get context from context route internally
+- Get merchant rules from db.json
+- Call geminiService.generateOffer(context, rules)
+- Save offer to db.json offers array with id, timestamp, context snapshot
+- Return offer object
+
+GET /api/offers:
+- Return last 10 offers from db.json
+
+POST /api/redeem  (body: { offerId, userId: "mia" }):
+- Find offer in db.json
+- Call qrService.generateQR(offerId, "mia")
+- Save redemption record to db.json
+- Return { success: true, qrDataUrl, cashbackAmount: (price * discount/100) }
+
+POST /api/redeem/validate  (body: { token }):
+- Find redemption by token in db.json
+- Mark as used
+- Return { valid: true, message: "Offer redeemed successfully" }
+
+GET /api/merchant/dashboard:
+- Calculate from db.json: offersToday, acceptRate, totalRevenueLift, avgDiscount
+- Return metrics object
+
+PUT /api/merchant/rules  (body: updated rules):
+- Update merchant rules in db.json
+- Return { success: true }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DB.JSON INITIAL SEED DATA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{
+  "merchants": [
+    {
+      "id": "cafe-muller",
+      "name": "Café Müller",
+      "address": "Marktplatz 12, Stuttgart",
+      "emoji": "☕",
+      "distanceMeters": 80,
+      "rules": {
+        "maxDiscountPercent": 20,
+        "triggerStartHour": 10,
+        "triggerEndHour": 14,
+        "volumeThreshold": 60,
+        "preferredTone": "warm"
+      }
+    }
+  ],
+  "offers": [],
+  "redemptions": []
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND: USER APP (client/src/views/UserApp.jsx)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Mobile-first layout, max-width 390px, centered on desktop.
+White background. Fonts: DM Serif Display for headlines, DM Sans for body.
+
+Color variables (use in inline styles or Tailwind custom):
+  ink: #141412
+  teal: #2d7d6f
+  warm: #e8a857
+  offwhite: #f7f6f3
+  ink60: #6b6a65
+
+On component mount:
+1. Call GET /api/context → store in contextState
+2. Call POST /api/offers/generate → store in currentOffer
+3. Show loading skeleton while fetching
+
+RENDER:
+
+[STATUS BAR]
+- Left: "12:04" (static)
+- Right: battery icon (static SVG)
+
+[HEADER]
+- Small text: "Guten Mittag,"
+- Large serif: "Mia Schneider"
+- Avatar circle top-right: "MS" initials, amber background
+
+[CONTEXT STRIP - horizontal row of 3 chips]
+- Blue dot + contextState.weather.temp + "°C " + contextState.weather.condition
+- Teal dot + "Altstadt"
+- Amber dot + time period (if hour 11-13: "Lunch break", else "Afternoon")
+
+[MAIN OFFER CARD - dark background #141412, white text, border-radius 24px]
+- Top row: merchant emoji + name + distance + "Live" badge (pulsing green dot)
+- Headline: currentOffer.headline (DM Serif Display, 22px)
+- Subtext: currentOffer.subtext (small, 60% opacity)
+- Bottom row: amber pill showing discountPercent + "% off" | countdown timer
+- Countdown: starts at currentOffer.expiryMinutes * 60, counts down every second
+- Loading state: show gray skeleton boxes
+
+[TWO BUTTONS]
+- "Redeem offer" button: teal background, white text, full-width left half
+- "Not now" button: light gray, full-width right half
+- On "Redeem": call POST /api/redeem with offerId → show QRModal
+- On "Not now": fade card to 30% opacity, show "Dismissed" text
+
+[QR MODAL - overlay]
+- Semi-transparent dark overlay
+- White card in center
+- Title: "Show at the counter"
+- QR code image: <img src={qrDataUrl} />
+- Cashback text: "€0.75 cashback credited to your wallet"
+- Close button (X)
+- Auto-close after 30 seconds
+
+[NEARBY OFFERS - section title "Nearby offers"]
+- Two static list items:
+  Item 1: 🥗 Marktküche | "Lunch special · 2 seats left" | 10% off | 140m
+  Item 2: 📚 Bücherstube König | "Quiet afternoon deal" | 12% off | 210m
+
+[CONTEXT PANEL - collapsible, below nearby offers]
+- Title: "What triggered this offer"
+- Show: weather signal + merchant volume + time of day
+- Small teal text
+
+[GDPR NOTE - bottom]
+- Small gray text: "Location intent processed on-device · 
+  Only abstract signals sent to server"
+
+[BOTTOM NAV]
+- 4 tabs: ⬡ Offers (active, dark bg), 🗺 Map, 🎟 Wallet, 👤 Profile
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND: MERCHANT DASHBOARD
+(client/src/views/MerchantDashboard.jsx)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Full-width layout, white background.
+
+On mount: 
+- Call GET /api/merchant/dashboard → store metrics
+- Call GET /api/offers → store offersList
+- Auto-refresh every 30 seconds
+
+RENDER:
+
+[HEADER - flex row]
+- Left: "⬡ City Wallet — Merchant" logo | "Café Müller" (large serif) | address
+- Right: Today's date | green "AI offers active" badge with pulsing dot
+
+[METRICS ROW - 4 equal columns with light border separators]
+- Offers today: metrics.offersToday
+- Accept rate: metrics.acceptRate + "%"
+- Revenue lift: "€" + metrics.totalRevenueLift
+- Avg discount: metrics.avgDiscount + "%"
+Each metric: small uppercase label + large number (DM Serif Display 32px)
++ small colored change text (↑ green or ↓ red)
+
+[TWO-COLUMN BODY]
+
+LEFT COLUMN:
+
+[ACTIVE OFFER PANEL - light gray bg, rounded]
+- Title + "Live now" green badge
+- Current offer headline + discount
+- Triggered by: context snapshot text
+- Progress bar: Views (show 60% filled, teal)
+- Progress bar: Redemptions (show 25% filled, amber)
+
+[RULE CONFIG CARD]
+- Title: "AI Rule Config"
+- Show editable fields (input elements):
+  - Max discount: number input (default 20)
+  - Trigger window: "10:00 – 14:00" (text input)
+  - Volume threshold: number input (default 60)
+  - Preferred tone: select dropdown (warm/urgent/playful)
+- Toggle switch: "AI auto-generate offer" (default ON, teal when on)
+- "Save rules" button (teal) → calls PUT /api/merchant/rules
+
+RIGHT COLUMN:
+
+[PERFORMANCE TABLE]
+- Headers: Offer | Accept Rate | Revenue
+- Map offersList to table rows
+- Accept rate column: mini bar + percentage
+- Use recharts or simple CSS bars
+
+[HOURLY REVENUE CHART]
+- Use recharts BarChart
+- Data: generate 8 bars for hours 08-16
+- Use simulated revenue values
+- Current hour bar highlighted in #141412 (dark)
+- Other bars in #edece9 (light gray)
+- Height: 120px
+
+[CONTEXT TRIGGER LOG]
+- Title: "Context trigger log"
+- Map last 5 offers to log items
+- Each item: colored dot + trigger description + time
+  - Green dot: offer was generated and sent
+  - Amber dot: pending/queued
+  - Gray dot: threshold not met
+
+[FOOTER]
+- Left: "Powered by City Wallet AI · DSV-Gruppe Payone integration"
+- Right: "Configure new rule →" dark button
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ROUTING (client/src/App.jsx)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+
+Routes:
+/ → UserApp
+/merchant → MerchantDashboard
+
+Add a small floating nav button on both pages:
+- On /: small button top-right "Merchant view →" linking to /merchant
+- On /merchant: small button top-right "← User app" linking to /
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ENVIRONMENT VARIABLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+In .env file:
+GEMINI_API_KEY=your_gemini_key_here
+OPENWEATHER_API_KEY=your_openweather_key_here
+PORT=3001
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEPENDENCIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Backend:
+- express, cors, dotenv, axios
+- @google/generative-ai
+- qrcode, uuid
+- lowdb@1.0.0
+
+Frontend:
+- react, react-dom, react-router-dom
+- axios, recharts
+- tailwindcss, autoprefixer, postcss
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ERROR HANDLING — CRITICAL FOR DEMO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Every API call must have try/catch with fallback data.
+The demo must NEVER crash or show a blank screen.
+
+Fallbacks:
+- Weather API fails → use { temp: 9, condition: "overcast", feelsLike: 6 }
+- Gemini API fails → use hardcoded offer:
+  { headline: "Cold outside? Come in.", 
+    subtext: "Fresh batch brewed, quiet right now",
+    discountPercent: 15, expiryMinutes: 20, 
+    tone: "warm", ctaText: "Claim offer" }
+- Redeem fails → still show a QR code generated locally
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BUILD ORDER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Build in this exact order:
+1. package.json files + install dependencies
+2. .env file with placeholder keys
+3. db.json with seed data
+4. server/services/ (all 4 service files)
+5. server/routes/ (all 4 route files)
+6. server/index.js
+7. client/src/api/cityWalletApi.js
+8. client/src/components/ (all 5 components)
+9. client/src/views/UserApp.jsx
+10. client/src/views/MerchantDashboard.jsx
+11. client/src/App.jsx + main.jsx + index.css
+12. Tailwind config
+13. README.md
+
+After building everything, start both servers and 
+confirm the full flow works:
+context fetch → offer generation → display → redeem → QR → merchant dashboard.

@@ -3,13 +3,21 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: City Wallet API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: context
+    description: Real-time context signals
+  - name: offers
+    description: AI-generated offers
+  - name: redeem
+    description: Offer redemption flow
+  - name: merchant
+    description: Merchant dashboard and rules
 paths:
   /healthz:
     get:
@@ -24,6 +32,135 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /context:
+    get:
+      operationId: getContext
+      tags: [context]
+      summary: Get current context state
+      description: Returns the composite context state (weather, location, time, merchant demand)
+      responses:
+        "200":
+          description: Current context state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContextState"
+
+  /offers/generate:
+    post:
+      operationId: generateOffer
+      tags: [offers]
+      summary: Generate a new AI offer
+      description: Uses Gemini to generate a hyper-personalized offer based on current context and merchant rules
+      responses:
+        "200":
+          description: Newly generated offer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+
+  /offers:
+    get:
+      operationId: listOffers
+      tags: [offers]
+      summary: List recent offers
+      description: Returns the last 10 generated offers
+      responses:
+        "200":
+          description: Offer list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Offer"
+
+  /redeem:
+    post:
+      operationId: redeemOffer
+      tags: [redeem]
+      summary: Redeem an offer
+      description: Generates a QR code for the offer and records the redemption
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RedeemRequest"
+      responses:
+        "200":
+          description: Redemption response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedeemResponse"
+
+  /redeem/validate:
+    post:
+      operationId: validateRedemption
+      tags: [redeem]
+      summary: Validate a redemption token
+      description: Marks a redemption as used after counter scan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateRedemptionRequest"
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedemptionValidation"
+
+  /merchant/dashboard:
+    get:
+      operationId: getMerchantDashboard
+      tags: [merchant]
+      summary: Merchant dashboard metrics
+      description: Aggregated performance metrics for the merchant
+      responses:
+        "200":
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MerchantDashboard"
+
+  /merchant/rules:
+    get:
+      operationId: getMerchantRules
+      tags: [merchant]
+      summary: Get merchant rules
+      responses:
+        "200":
+          description: Rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Merchant"
+    put:
+      operationId: updateMerchantRules
+      tags: [merchant]
+      summary: Update merchant rules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MerchantRules"
+      responses:
+        "200":
+          description: Update result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateRulesResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +171,289 @@ components:
       required:
         - status
 
+    Weather:
+      type: object
+      properties:
+        temp:
+          type: number
+        condition:
+          type: string
+        feelsLike:
+          type: number
+      required:
+        - temp
+        - condition
+        - feelsLike
+
+    Location:
+      type: object
+      properties:
+        city:
+          type: string
+        district:
+          type: string
+      required:
+        - city
+        - district
+
+    TimeContext:
+      type: object
+      properties:
+        hour:
+          type: integer
+        period:
+          type: string
+      required:
+        - hour
+        - period
+
+    MerchantDemand:
+      type: object
+      properties:
+        merchantId:
+          type: string
+        volume:
+          type: integer
+        status:
+          type: string
+          enum: [low, normal]
+      required:
+        - merchantId
+        - volume
+        - status
+
+    ContextState:
+      type: object
+      properties:
+        weather:
+          $ref: "#/components/schemas/Weather"
+        location:
+          $ref: "#/components/schemas/Location"
+        time:
+          $ref: "#/components/schemas/TimeContext"
+        merchantDemand:
+          $ref: "#/components/schemas/MerchantDemand"
+        userBehavior:
+          type: string
+      required:
+        - weather
+        - location
+        - time
+        - merchantDemand
+        - userBehavior
+
+    Offer:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+        merchantId:
+          type: string
+        merchantName:
+          type: string
+        merchantEmoji:
+          type: string
+        distanceMeters:
+          type: integer
+        headline:
+          type: string
+        subtext:
+          type: string
+        discountPercent:
+          type: number
+        expiryMinutes:
+          type: integer
+        tone:
+          type: string
+        ctaText:
+          type: string
+        contextSnapshot:
+          $ref: "#/components/schemas/ContextState"
+        accepted:
+          type: boolean
+      required:
+        - id
+        - timestamp
+        - merchantId
+        - merchantName
+        - merchantEmoji
+        - distanceMeters
+        - headline
+        - subtext
+        - discountPercent
+        - expiryMinutes
+        - tone
+        - ctaText
+        - contextSnapshot
+        - accepted
+
+    RedeemRequest:
+      type: object
+      properties:
+        offerId:
+          type: string
+        userId:
+          type: string
+      required:
+        - offerId
+        - userId
+
+    RedeemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+        qrDataUrl:
+          type: string
+        cashbackAmount:
+          type: number
+      required:
+        - success
+        - token
+        - qrDataUrl
+        - cashbackAmount
+
+    ValidateRedemptionRequest:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    RedemptionValidation:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        message:
+          type: string
+      required:
+        - valid
+        - message
+
+    MerchantRules:
+      type: object
+      properties:
+        maxDiscountPercent:
+          type: integer
+        triggerStartHour:
+          type: integer
+        triggerEndHour:
+          type: integer
+        volumeThreshold:
+          type: integer
+        preferredTone:
+          type: string
+          enum: [warm, urgent, playful]
+        autoGenerate:
+          type: boolean
+      required:
+        - maxDiscountPercent
+        - triggerStartHour
+        - triggerEndHour
+        - volumeThreshold
+        - preferredTone
+        - autoGenerate
+
+    Merchant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        emoji:
+          type: string
+        distanceMeters:
+          type: integer
+        rules:
+          $ref: "#/components/schemas/MerchantRules"
+      required:
+        - id
+        - name
+        - address
+        - emoji
+        - distanceMeters
+        - rules
+
+    OfferPerformance:
+      type: object
+      properties:
+        offerId:
+          type: string
+        headline:
+          type: string
+        discountPercent:
+          type: number
+        timestamp:
+          type: string
+        accepted:
+          type: boolean
+        acceptRate:
+          type: number
+        revenue:
+          type: number
+      required:
+        - offerId
+        - headline
+        - discountPercent
+        - timestamp
+        - accepted
+        - acceptRate
+        - revenue
+
+    MerchantDashboard:
+      type: object
+      properties:
+        merchant:
+          $ref: "#/components/schemas/Merchant"
+        offersToday:
+          type: integer
+        acceptRate:
+          type: number
+        totalRevenueLift:
+          type: number
+        avgDiscount:
+          type: number
+        currentOffer:
+          oneOf:
+            - $ref: "#/components/schemas/Offer"
+            - type: "null"
+        viewsProgress:
+          type: number
+        redemptionsProgress:
+          type: number
+        offersList:
+          type: array
+          items:
+            $ref: "#/components/schemas/OfferPerformance"
+        context:
+          $ref: "#/components/schemas/ContextState"
+      required:
+        - merchant
+        - offersToday
+        - acceptRate
+        - totalRevenueLift
+        - avgDiscount
+        - viewsProgress
+        - redemptionsProgress
+        - offersList
+        - context
+
+    UpdateRulesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        rules:
+          $ref: "#/components/schemas/MerchantRules"
+      required:
+        - success
+        - rules

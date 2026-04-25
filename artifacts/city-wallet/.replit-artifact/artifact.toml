@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "City Wallet"
+version = "1.0.0"
+id = "artifacts/city-wallet"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24827
+
+[services.development]
+run = "pnpm --filter @workspace/city-wallet run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/city-wallet", "run", "build" ]
+publicDir = "artifacts/city-wallet/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24827"
+BASE_PATH = "/"

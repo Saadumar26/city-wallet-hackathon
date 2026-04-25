@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>City Wallet — Design Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white: #ffffff;
+    --off-white: #f7f6f3;
+    --cream: #f0ede6;
+    --ink: #141412;
+    --ink-60: #6b6a65;
+    --ink-30: #c4c3be;
+    --ink-10: #edece9;
+    --accent: #1a1a18;
+    --warm: #e8a857;
+    --warm-light: #fdf3e3;
+    --teal: #2d7d6f;
+    --teal-light: #e6f4f1;
+    --red: #d94f3d;
+    --red-light: #fdf0ee;
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--off-white);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+  }
+
+  /* Page header */
+  .page-header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+  .page-header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ink);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+  .page-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .page-header h1 em {
+    font-style: italic;
+    color: var(--ink-60);
+  }
+  .page-header p {
+    font-size: 15px;
+    color: var(--ink-60);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Layout */
+  .screens-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .screens-grid { grid-template-columns: 1fr; }
+  }
+
+  .screen-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .screen-label::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: var(--ink-30);
+  }
+
+  /* ===================== MOBILE PHONE FRAME ===================== */
+  .phone-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+  .phone-frame {
+    width: 320px;
+    background: var(--ink);
+    border-radius: 44px;
+    padding: 12px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.08),
+      0 32px 80px rgba(0,0,0,0.22),
+      0 8px 24px rgba(0,0,0,0.14);
+    position: relative;
+  }
+  .phone-notch {
+    width: 90px;
+    height: 26px;
+    background: var(--ink);
+    border-radius: 0 0 18px 18px;
+    margin: 0 auto 0;
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .phone-notch .camera { width: 8px; height: 8px; border-radius: 50%; background: #2a2a28; }
+  .phone-notch .speaker { width: 40px; height: 4px; border-radius: 2px; background: #2a2a28; }
+  .phone-screen {
+    background: var(--white);
+    border-radius: 34px;
+    overflow: hidden;
+    height: 640px;
+    position: relative;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .phone-screen::-webkit-scrollbar { display: none; }
+
+  /* ===================== MOBILE APP UI ===================== */
+  .app-status-bar {
+    padding: 14px 20px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+  }
+  .app-status-bar .time { font-size: 13px; font-weight: 600; }
+  .app-status-bar .icons { display: flex; gap: 5px; align-items: center; }
+  .app-status-bar .icons span {
+    width: 14px;
+    height: 9px;
+    background: var(--ink);
+    border-radius: 2px;
+    display: block;
+    opacity: 0.8;
+  }
+
+  .app-header {
+    padding: 8px 20px 16px;
+  }
+  .app-header .greeting {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-60);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .app-header .name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .app-header .name {
+    font-family: var(--font-display);
+    font-size: 22px;
+  }
+  .app-header .avatar {
+    width: 36px;
+    height: 36px;
+    background: var(--warm-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--warm);
+    border: 1.5px solid #f0d9b0;
+  }
+
+  /* Context strip */
+  .context-strip {
+    margin: 0 20px 16px;
+    background: var(--off-white);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .context-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-60);
+  }
+  .context-chip .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .context-chip .dot.weather { background: #3b82f6; }
+  .context-chip .dot.location { background: var(--teal); }
+  .context-chip .dot.time { background: var(--warm); }
+  .context-sep { width: 1px; height: 14px; background: var(--ink-10); }
+
+  /* Section title */
+  .section-title {
+    padding: 0 20px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+  }
+
+  /* ===== MAIN OFFER CARD ===== */
+  .offer-card-main {
+    margin: 0 20px 14px;
+    background: var(--ink);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .offer-card-main:active { transform: scale(0.98); }
+  .offer-card-main .bg-circle {
+    position: absolute;
+    right: -30px;
+    top: -30px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .offer-card-main .bg-circle-2 {
+    position: absolute;
+    right: 20px;
+    bottom: -50px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .offer-card-main .merchant-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .offer-card-main .merchant-icon {
+    width: 38px;
+    height: 38px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .offer-card-main .merchant-name {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+  .offer-card-main .merchant-dist {
+    font-size: 11px;
+    opacity: 0.55;
+    margin-top: 1px;
+  }
+  .offer-card-main .live-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 100px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .offer-card-main .live-badge .pulse {
+    width: 5px;
+    height: 5px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse-anim 1.5s infinite;
+  }
+  @keyframes pulse-anim {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .offer-card-main .offer-headline {
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+  .offer-card-main .offer-sub {
+    font-size: 12px;
+    opacity: 0.6;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .offer-card-main .offer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .offer-card-main .discount-pill {
+    background: var(--warm);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 100px;
+  }
+  .offer-card-main .timer {
+    font-size: 11px;
+    opacity: 0.55;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .offer-card-main .timer-val {
+    font-weight: 600;
+    opacity: 0.8;
+    font-size: 13px;
+  }
+
+  /* CTA buttons */
+  .cta-row {
+    margin: 0 20px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .cta-btn {
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .cta-btn.primary {
+    background: var(--teal);
+    color: var(--white);
+  }
+  .cta-btn.secondary {
+    background: var(--ink-10);
+    color: var(--ink-60);
+  }
+  .cta-btn:active { transform: scale(0.97); }
+
+  /* Nearby offers list */
+  .offer-list-item {
+    margin: 0 20px 10px;
+    background: var(--white);
+    border: 1px solid var(--ink-10);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .offer-list-item:hover { border-color: var(--ink-30); }
+  .offer-list-item .item-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .offer-list-item .item-icon.food { background: #fff3e0; }
+  .offer-list-item .item-icon.shop { background: #e8f5e9; }
+  .offer-list-item .item-info { flex: 1 }
+  .offer-list-item .item-name {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .offer-list-item .item-desc {
+    font-size: 11px;
+    color: var(--ink-60);
+  }
+  .offer-list-item .item-right { text-align: right; }
+  .offer-list-item .item-discount {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal);
+  }
+  .offer-list-item .item-dist {
+    font-size: 10px;
+    color: var(--ink-30);
+    margin-top: 2px;
+  }
+
+  /* Bottom nav */
+  .app-bottom-nav {
+    position: sticky;
+    bottom: 0;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--ink-10);
+    padding: 10px 20px 20px;
+    display: flex;
+    justify-content: space-around;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--ink-30);
+    cursor: pointer;
+  }
+  .nav-item.active { color: var(--ink); }
+  .nav-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .nav-item.active .nav-icon {
+    background: var(--ink);
+    font-size: 12px;
+  }
+
+  /* ===================== MERCHANT DASHBOARD ===================== */
+  .dashboard-card {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--ink-10);
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+
+  .dash-header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--ink-10);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .dash-header .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .dash-header .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--ink);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: white;
+  }
+  .dash-header .logo-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .dash-header .merchant-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: -0.02em;
+  }
+  .dash-header .merchant-meta {
+    font-size: 12px;
+    color: var(--ink-60);
+    margin-top: 2px;
+  }
+  .dash-header .header-right { text-align: right; }
+  .dash-header .date {
+    font-size: 12px;
+    color: var(--ink-60);
+    margin-bottom: 8px;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .status-badge.active { background: #e6f7f0; color: #1a7a4a; }
+  .status-badge.active::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    animation: pulse-anim 1.5s infinite;
+  }
+
+  /* Metrics row */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--ink-10);
+  }
+  .metric-cell {
+    padding: 20px 24px;
+    border-right: 1px solid var(--ink-10);
+  }
+  .metric-cell:last-child { border-right: none; }
+  .metric-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 6px;
+  }
+  .metric-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .metric-change {
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .metric-change.up { color: var(--teal); }
+  .metric-change.down { color: var(--red); }
+
+  /* Dashboard body */
+  .dash-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .dash-section {
+    padding: 24px 28px;
+    border-right: 1px solid var(--ink-10);
+  }
+  .dash-section:last-child { border-right: none; }
+  .dash-section-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dash-section-title a {
+    font-size: 10px;
+    color: var(--teal);
+    text-decoration: none;
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 400;
+  }
+
+  /* Active offer panel */
+  .active-offer-panel {
+    background: var(--off-white);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .active-offer-panel .aop-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .active-offer-panel .aop-name {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .active-offer-panel .aop-discount {
+    font-size: 20px;
+    font-family: var(--font-display);
+    color: var(--teal);
+  }
+  .active-offer-panel .aop-context {
+    font-size: 11px;
+    color: var(--ink-60);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .progress-bar-wrap {
+    margin-bottom: 6px;
+  }
+  .progress-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--ink-60);
+    margin-bottom: 5px;
+  }
+  .progress-bar-track {
+    height: 4px;
+    background: var(--ink-10);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--teal);
+    transition: width 0.8s ease;
+  }
+  .progress-bar-fill.warm { background: var(--warm); }
+
+  /* Rule config */
+  .rule-card {
+    background: var(--off-white);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .rule-card .rule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .rule-card .rule-title {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .rule-card .rule-tag {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .rule-card .rule-tag.auto { background: var(--teal-light); color: var(--teal); }
+  .rule-card .rule-tag.manual { background: var(--warm-light); color: #a0722a; }
+
+  .rule-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .rule-row:last-child { margin-bottom: 0; }
+  .rule-row .rule-key {
+    font-size: 11px;
+    color: var(--ink-60);
+  }
+  .rule-row .rule-val {
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  /* Toggle switch */
+  .toggle-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-top: 1px solid var(--ink-10);
+    margin-top: 10px;
+  }
+  .toggle-label { font-size: 12px; font-weight: 500; }
+  .toggle-sub { font-size: 10px; color: var(--ink-60); }
+  .toggle {
+    width: 40px;
+    height: 22px;
+    background: var(--teal);
+    border-radius: 11px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .toggle.off { background: var(--ink-10); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 21px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle.off::after { left: 3px; }
+
+  /* Offer performance table */
+  .perf-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .perf-table th {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    text-align: left;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--ink-10);
+  }
+  .perf-table td {
+    font-size: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--ink-10);
+    vertical-align: middle;
+  }
+  .perf-table tr:last-child td { border-bottom: none; }
+  .perf-table .offer-name { font-weight: 500; }
+  .perf-table .offer-type {
+    font-size: 10px;
+    color: var(--ink-60);
+    margin-top: 1px;
+  }
+  .accept-rate-bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .mini-bar-track {
+    flex: 1;
+    height: 4px;
+    background: var(--ink-10);
+    border-radius: 2px;
+    overflow: hidden;
+    min-width: 50px;
+  }
+  .mini-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--teal);
+  }
+  .mini-bar-fill.low { background: var(--warm); }
+  .mini-bar-pct {
+    font-size: 11px;
+    font-weight: 500;
+    min-width: 28px;
+    text-align: right;
+  }
+
+  /* Revenue chart fake bars */
+  .chart-area {
+    margin-top: 8px;
+  }
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    height: 80px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--ink-10);
+  }
+  .chart-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .chart-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    background: var(--ink-10);
+    transition: background 0.2s;
+  }
+  .chart-bar.active { background: var(--ink); }
+  .chart-bar.teal { background: var(--teal); }
+  .chart-x-labels {
+    display: flex;
+    gap: 5px;
+    margin-top: 6px;
+  }
+  .chart-x-label {
+    flex: 1;
+    text-align: center;
+    font-size: 9px;
+    color: var(--ink-30);
+  }
+  .chart-x-label.today { color: var(--ink); font-weight: 500; }
+
+  /* Context trigger log */
+  .trigger-log {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .trigger-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--off-white);
+    border-radius: 10px;
+  }
+  .trigger-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+  .trigger-dot.triggered { background: var(--teal); }
+  .trigger-dot.pending { background: var(--warm); }
+  .trigger-dot.missed { background: var(--ink-30); }
+  .trigger-text { font-size: 11px; line-height: 1.5; }
+  .trigger-text strong { font-weight: 500; display: block; margin-bottom: 1px; }
+  .trigger-time {
+    font-size: 10px;
+    color: var(--ink-60);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* Dashboard footer */
+  .dash-footer {
+    padding: 16px 28px;
+    border-top: 1px solid var(--ink-10);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--off-white);
+  }
+  .dash-footer .footer-text {
+    font-size: 11px;
+    color: var(--ink-60);
+  }
+  .dash-footer .footer-btn {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .dash-footer .footer-btn:hover { opacity: 0.85; }
+
+  /* Animations */
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .phone-wrapper, .dashboard-card {
+    animation: fade-in-up 0.5s ease both;
+  }
+  .dashboard-card { animation-delay: 0.1s; }
+
+  /* Timer countdown */
+  #countdown { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="badge">
+    <span>●</span> Hack-Nation × DSV-Gruppe · Global AI Hackathon 2026
+  </div>
+  <h1>City Wallet<br><em>Design Prototype</em></h1>
+  <p>Stuttgart · Tuesday 12:04 · 9°C overcast · Café Müller 80m away</p>
+</div>
+
+<div class="screens-grid">
+
+  <!-- ============ LEFT: MOBILE APP ============ -->
+  <div>
+    <div class="screen-label">01 — User mobile app</div>
+    <div class="phone-wrapper">
+      <div class="phone-frame">
+        <div class="phone-notch">
+          <div class="speaker"></div>
+          <div class="camera"></div>
+        </div>
+        <div class="phone-screen">
+
+          <!-- Status bar -->
+          <div class="app-status-bar">
+            <span class="time">12:04</span>
+            <div class="icons">
+              <span style="width:16px;height:10px;border-radius:2px;border:1.5px solid #141412;position:relative;background:transparent;display:block">
+                <span style="position:absolute;top:2px;left:2px;right:4px;bottom:2px;background:#141412;border-radius:1px;display:block"></span>
+              </span>
+              <span style="font-size:10px;opacity:0.6">▲▲▲</span>
+            </div>
+          </div>
+
+          <!-- Header -->
+          <div class="app-header">
+            <div class="greeting">Guten Mittag,</div>
+            <div class="name-row">
+              <div class="name">Mia Schneider</div>
+              <div class="avatar">MS</div>
+            </div>
+          </div>
+
+          <!-- Context strip -->
+          <div class="context-strip">
+            <div class="context-chip">
+              <div class="dot weather"></div>
+              9°C overcast
+            </div>
+            <div class="context-sep"></div>
+            <div class="context-chip">
+              <div class="dot location"></div>
+              Altstadt
+            </div>
+            <div class="context-sep"></div>
+            <div class="context-chip">
+              <div class="dot time"></div>
+              Lunch break
+            </div>
+          </div>
+
+          <!-- Section -->
+          <div class="section-title">Best offer right now</div>
+
+          <!-- Main offer card -->
+          <div class="offer-card-main" onclick="redeemOffer()">
+            <div class="bg-circle"></div>
+            <div class="bg-circle-2"></div>
+            <div class="merchant-row">
+              <div class="merchant-icon">☕</div>
+              <div>
+                <div class="merchant-name">Café Müller</div>
+                <div class="merchant-dist">80m · Marktplatz 12</div>
+              </div>
+              <div class="live-badge">
+                <div class="pulse"></div>
+                Live
+              </div>
+            </div>
+            <div class="offer-headline">Cold outside?<br>Your cappuccino awaits.</div>
+            <div class="offer-sub">Fresh batch just brewed · quiet right now · perfect timing</div>
+            <div class="offer-footer">
+              <div class="discount-pill">15% off</div>
+              <div class="timer">
+                Expires in <span class="timer-val" id="countdown">18:42</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CTA buttons -->
+          <div class="cta-row">
+            <button class="cta-btn primary" onclick="redeemOffer()">Redeem offer</button>
+            <button class="cta-btn secondary" onclick="dismissOffer()">Not now</button>
+          </div>
+
+          <!-- Nearby section -->
+          <div class="section-title">Nearby offers</div>
+
+          <div class="offer-list-item">
+            <div class="item-icon food">🥗</div>
+            <div class="item-info">
+              <div class="item-name">Marktküche</div>
+              <div class="item-desc">Lunch special · 2 seats left</div>
+            </div>
+            <div class="item-right">
+              <div class="item-discount">10% off</div>
+              <div class="item-dist">140m</div>
+            </div>
+          </div>
+
+          <div class="offer-list-item">
+            <div class="item-icon shop">📚</div>
+            <div class="item-info">
+              <div class="item-name">Bücherstube König</div>
+              <div class="item-desc">Quiet afternoon deal</div>
+            </div>
+            <div class="item-right">
+              <div class="item-discount">12% off</div>
+              <div class="item-dist">210m</div>
+            </div>
+          </div>
+
+          <div style="height: 10px;"></div>
+
+          <!-- Bottom nav -->
+          <div class="app-bottom-nav">
+            <div class="nav-item active">
+              <div class="nav-icon" style="background:var(--ink);color:white;font-size:12px;">⬡</div>
+              <span>Offers</span>
+            </div>
+            <div class="nav-item">
+              <div class="nav-icon">🗺</div>
+              <span>Map</span>
+            </div>
+            <div class="nav-item">
+              <div class="nav-icon">🎟</div>
+              <span>Wallet</span>
+            </div>
+            <div class="nav-item">
+              <div class="nav-icon">👤</div>
+              <span>Profile</span>
+            </div>
+          </div>
+
+        </div><!-- /phone-screen -->
+      </div><!-- /phone-frame -->
+    </div><!-- /phone-wrapper -->
+  </div><!-- /left col -->
+
+  <!-- ============ RIGHT: MERCHANT DASHBOARD ============ -->
+  <div>
+    <div class="screen-label">02 — Merchant dashboard</div>
+    <div class="dashboard-card">
+
+      <!-- Header -->
+      <div class="dash-header">
+        <div>
+          <div class="logo-row">
+            <div class="logo-icon">⬡</div>
+            <div class="logo-text">City Wallet — Merchant</div>
+          </div>
+          <div class="merchant-title">Café Müller</div>
+          <div class="merchant-meta">Marktplatz 12 · Stuttgart Altstadt</div>
+        </div>
+        <div class="header-right">
+          <div class="date">Tuesday, 6 May 2026</div>
+          <div class="status-badge active">AI offers active</div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-row">
+        <div class="metric-cell">
+          <div class="metric-label">Offers today</div>
+          <div class="metric-value">7</div>
+          <div class="metric-change up">↑ +3 vs yesterday</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-label">Accept rate</div>
+          <div class="metric-value">62%</div>
+          <div class="metric-change up">↑ +8pts this week</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-label">Revenue lift</div>
+          <div class="metric-value">€84</div>
+          <div class="metric-change up">↑ vs no-offer baseline</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-label">Avg discount</div>
+          <div class="metric-value">13%</div>
+          <div class="metric-change down">↓ −2pts (AI optimized)</div>
+        </div>
+      </div>
+
+      <!-- Body grid -->
+      <div class="dash-body">
+
+        <!-- Left: Active offer + rules -->
+        <div class="dash-section">
+          <div class="dash-section-title">
+            Active offer
+            <span class="status-badge active" style="font-size:9px;padding:3px 8px;">Live now</span>
+          </div>
+
+          <div class="active-offer-panel">
+            <div class="aop-row">
+              <div>
+                <div class="aop-name">Cappuccino special</div>
+                <div style="font-size:10px;color:var(--ink-60);margin-top:2px;">AI generated · 11:58</div>
+              </div>
+              <div class="aop-discount">15% off</div>
+            </div>
+            <div class="aop-context">
+              Triggered by: cold weather (9°C) + transaction volume 40% below Mon avg + 2 users detected browsing within 100m
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-label"><span>Views</span><span>12 / ~20 est.</span></div>
+              <div class="progress-bar-track"><div class="progress-bar-fill" style="width:60%"></div></div>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-label"><span>Redemptions</span><span>3</span></div>
+              <div class="progress-bar-track"><div class="progress-bar-fill warm" style="width:25%"></div></div>
+            </div>
+          </div>
+
+          <div class="dash-section-title" style="margin-top:16px;">AI rule config</div>
+
+          <div class="rule-card">
+            <div class="rule-header">
+              <div class="rule-title">Quiet hours rule</div>
+              <div class="rule-tag auto">Auto</div>
+            </div>
+            <div class="rule-row">
+              <span class="rule-key">Max discount</span>
+              <span class="rule-val">20%</span>
+            </div>
+            <div class="rule-row">
+              <span class="rule-key">Trigger window</span>
+              <span class="rule-val">10:00 – 14:00</span>
+            </div>
+            <div class="rule-row">
+              <span class="rule-key">Volume threshold</span>
+              <span class="rule-val">&lt; 60% of avg</span>
+            </div>
+            <div class="rule-row">
+              <span class="rule-key">Offer tone</span>
+              <span class="rule-val">Warm · situational</span>
+            </div>
+            <div class="toggle-wrap">
+              <div>
+                <div class="toggle-label">AI auto-generate offer</div>
+                <div class="toggle-sub">AI creates content within rules</div>
+              </div>
+              <div class="toggle" onclick="this.classList.toggle('off')"></div>
+            </div>
+          </div>
+
+        </div><!-- /left dash section -->
+
+        <!-- Right: Performance + context log -->
+        <div class="dash-section">
+
+          <div class="dash-section-title">
+            Today's offer performance
+            <a href="#">Export ↗</a>
+          </div>
+
+          <table class="perf-table">
+            <thead>
+              <tr>
+                <th>Offer</th>
+                <th>Accept rate</th>
+                <th style="text-align:right">Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="offer-name">Cappuccino 15%</div>
+                  <div class="offer-type">Cold weather · 12:04</div>
+                </td>
+                <td>
+                  <div class="accept-rate-bar">
+                    <div class="mini-bar-track"><div class="mini-bar-fill" style="width:62%"></div></div>
+                    <div class="mini-bar-pct">62%</div>
+                  </div>
+                </td>
+                <td style="text-align:right;font-weight:500">€31</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="offer-name">Frühstück 10%</div>
+                  <div class="offer-type">Morning slow · 08:30</div>
+                </td>
+                <td>
+                  <div class="accept-rate-bar">
+                    <div class="mini-bar-track"><div class="mini-bar-fill" style="width:74%"></div></div>
+                    <div class="mini-bar-pct">74%</div>
+                  </div>
+                </td>
+                <td style="text-align:right;font-weight:500">€28</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="offer-name">Pastry 12%</div>
+                  <div class="offer-type">Event nearby · 10:15</div>
+                </td>
+                <td>
+                  <div class="accept-rate-bar">
+                    <div class="mini-bar-track"><div class="mini-bar-fill low" style="width:41%"></div></div>
+                    <div class="mini-bar-pct" style="color:var(--warm)">41%</div>
+                  </div>
+                </td>
+                <td style="text-align:right;font-weight:500">€25</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Revenue chart -->
+          <div class="chart-area" style="margin-top:20px;">
+            <div class="dash-section-title" style="margin-bottom:8px;">Hourly revenue</div>
+            <div class="chart-bars">
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:28%"></div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:44%"></div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar teal" style="height:72%"></div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:38%"></div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:30%"></div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar active" style="height:62%"></div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:18%"></div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:12%"></div></div>
+            </div>
+            <div class="chart-x-labels">
+              <div class="chart-x-label">08</div>
+              <div class="chart-x-label">09</div>
+              <div class="chart-x-label">10</div>
+              <div class="chart-x-label">11</div>
+              <div class="chart-x-label">11:30</div>
+              <div class="chart-x-label today">12 ←</div>
+              <div class="chart-x-label">13</div>
+              <div class="chart-x-label">14</div>
+            </div>
+          </div>
+
+          <!-- Context trigger log -->
+          <div style="margin-top:20px;">
+            <div class="dash-section-title">Context trigger log</div>
+            <div class="trigger-log">
+              <div class="trigger-item">
+                <div class="trigger-dot triggered"></div>
+                <div class="trigger-text">
+                  <strong>Offer generated & sent</strong>
+                  9°C + vol. −40% + 2 users browsing 100m radius
+                </div>
+                <div class="trigger-time">12:04</div>
+              </div>
+              <div class="trigger-item">
+                <div class="trigger-dot pending"></div>
+                <div class="trigger-text">
+                  <strong>Stadtfest detected nearby</strong>
+                  Event foot-traffic spike expected 13:30 — offer queued
+                </div>
+                <div class="trigger-time">11:50</div>
+              </div>
+              <div class="trigger-item">
+                <div class="trigger-dot missed"></div>
+                <div class="trigger-text">
+                  <strong>Trigger window missed</strong>
+                  Volume recovered before threshold — no offer needed
+                </div>
+                <div class="trigger-time">11:20</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /right dash section -->
+      </div><!-- /dash-body -->
+
+      <!-- Footer -->
+      <div class="dash-footer">
+        <div class="footer-text">Powered by City Wallet AI · DSV-Gruppe Payone integration</div>
+        <button class="footer-btn">Configure new rule →</button>
+      </div>
+
+    </div><!-- /dashboard-card -->
+  </div><!-- /right col -->
+
+</div><!-- /screens-grid -->
+
+<script>
+  // Countdown timer
+  let secs = 18 * 60 + 42;
+  function updateTimer() {
+    secs = Math.max(0, secs - 1);
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    const el = document.getElementById('countdown');
+    if (el) el.textContent = m + ':' + s;
+  }
+  setInterval(updateTimer, 1000);
+
+  // Redeem offer
+  function redeemOffer() {
+    const card = document.querySelector('.offer-card-main');
+    const cta = document.querySelector('.cta-row');
+    card.style.transition = 'all 0.3s';
+    card.style.background = 'var(--teal)';
+    card.querySelector('.offer-headline').textContent = 'Offer redeemed!';
+    card.querySelector('.offer-sub').textContent = 'Show QR code at the counter · €0.75 cashback';
+    card.querySelector('.discount-pill').textContent = '✓ Confirmed';
+    cta.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px;background:var(--teal-light);border-radius:10px;font-size:13px;color:var(--teal);font-weight:500">QR token generated — scan at Café Müller</div>';
+  }
+
+  // Dismiss
+  function dismissOffer() {
+    const card = document.querySelector('.offer-card-main');
+    card.style.transition = 'opacity 0.3s, transform 0.3s';
+    card.style.opacity = '0.3';
+    card.style.transform = 'scale(0.97)';
+    setTimeout(() => {
+      card.querySelector('.offer-headline').textContent = 'Offer dismissed.';
+      card.querySelector('.offer-sub').textContent = 'We won\'t show this again today.';
+      card.style.opacity = '1';
+      card.style.transform = 'scale(1)';
+    }, 300);
+  }
+</script>
+</body>
+</html>

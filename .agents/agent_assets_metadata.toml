@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "Q_yMBmYi7s-qtuVWrfd3-"
+uri = "file://artifacts/city-wallet/src/assets/mia.png"
+type = "image"
+title = "Mia Avatar"
+
+[[generated]]
+id = "GAlS5mFNcCedfGitKYaSi"
+uri = "file://artifacts/city-wallet/src/assets/gradient-bg.png"
+type = "image"
+title = "Soft hero gradient"
