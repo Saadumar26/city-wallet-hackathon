@@ -10,7 +10,7 @@ const EVENT_POOL = [
   "Schlossplatz Concert",
   "Stuttgart Marathon",
   "Weihnachtsmarkt",
-  "FrÃ¼hlingsfest",
+  "Frühlingsfest",
 ];
 
 const FOOTFALL_POOL: Array<LocalEvents["expectedFootfall"]> = [

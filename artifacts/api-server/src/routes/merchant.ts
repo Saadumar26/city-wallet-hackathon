@@ -52,7 +52,7 @@ router.get("/merchant/dashboard", async (_req, res, next) => {
           )
         : merchant.rules.maxDiscountPercent;
 
-    const currentOffer = allOffers[0] ?? null;
+    const currentOffer = allOffers[allOffers.length - 1] ?? null;
 
     const offersList: OfferPerformance[] = listRecentOffers(10).map((o) => {
       const offerRedemptions = redemptions.filter((r) => r.offerId === o.id);

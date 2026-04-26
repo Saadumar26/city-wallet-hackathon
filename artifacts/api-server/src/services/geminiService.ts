@@ -13,7 +13,7 @@ interface GeneratedOffer {
 
 const FALLBACK: GeneratedOffer = {
   headline: "Warm up with a cappuccino",
-  subtext: "Cold outside, quiet cafÃ© nearby",
+  subtext: "Cold outside, quiet café nearby",
   discountPercent: 15,
   expiryMinutes: 20,
   tone: "warm",
