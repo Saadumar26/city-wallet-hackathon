@@ -1,0 +1,147 @@
+Please make these 5 important improvements to 
+strengthen our hackathon submission. Implement 
+them one by one and confirm each is working.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPROVEMENT 1 — GDPR PRIVACY PANEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+In the consumer view (user mobile app), add a 
+small expandable privacy card below the main 
+offer card.
+
+Title: "🔒 Your privacy"
+Default state: collapsed (just shows title + 
+chevron down icon)
+Expanded state shows:
+- "📍 Your precise location stays on your device"
+- "🧠 Only an abstract intent signal is sent 
+   to our server (e.g. 'browsing + cold weather')"
+- "🚫 No personal movement data reaches the cloud"
+- "✅ GDPR compliant by design"
+
+Style: small card, light gray background, 
+teal left border, same font as rest of app.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPROVEMENT 2 — UX EXPLANATION PANEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The "Why am I seeing this?" expandable section 
+already exists — extend it to also show these 
+4 UX design points clearly:
+
+- "📱 Delivered as: In-app card — immediate, 
+   no lock-screen interruption needed"
+- "💬 Tone: Emotional-situational, not factual 
+   — speaks to the moment, not the discount"
+- "⚡ 3-second read: merchant + discount + 
+   expiry visible instantly without scrolling"
+- "🔚 Offer ends: Accept (QR generated), 
+   Dismiss (card fades), or Expiry (timer → 0)"
+
+These should appear as a clean list inside 
+the existing expandable panel or as a new 
+tab within it labeled "UX Design".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPROVEMENT 3 — CITY CONFIG FILE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Create a new file: artifacts/api-server/src/config/cityConfig.ts
+
+With this content:
+export const CITY_CONFIG = {
+  name: "Stuttgart",
+  district: "Altstadt",
+  lat: 48.7758,
+  lon: 9.1829,
+  timezone: "Europe/Berlin",
+  currency: "EUR",
+  language: "de",
+  merchantContext: "German inner-city retail"
+}
+
+Then replace ALL hardcoded Stuttgart/Altstadt/
+lat/lon references in the codebase with imports 
+from this config file.
+
+In the merchant dashboard header, add a small 
+gray text label:
+"City: Stuttgart · Change via cityConfig.ts"
+
+This shows judges the system is configurable 
+for any city without code changes.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPROVEMENT 4 — LOCAL EVENTS SIGNAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Add a simulated local events service:
+
+Create: artifacts/api-server/src/services/
+eventsSimulator.ts
+
+Logic:
+- Generate a random boolean (40% chance of event)
+- If true, randomly pick from this list:
+  ["Stuttgarter Weindorf", "Schlossplatz Concert", 
+   "Stuttgart Marathon", "Weihnachtsmarkt", 
+   "Frühlingsfest"]
+- Return:
+{
+  hasNearbyEvent: boolean,
+  eventName: string | null,
+  expectedFootfall: "high" | "normal" | "low",
+  distanceMeters: number (random 100-500)
+}
+
+Add this to the GET /api/context response:
+events: { hasNearbyEvent, eventName, 
+          expectedFootfall, distanceMeters }
+
+In the consumer view context strip, add a 4th 
+chip when hasNearbyEvent is true:
+"📅 [eventName]" with a purple dot
+
+In the Gemini offer generation prompt, include 
+the events data so AI can reference nearby 
+events in the offer copy when relevant.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPROVEMENT 5 — OFFER EXPIRY FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When the countdown timer reaches 0:
+- Main offer card background changes to 
+  light gray (#f0f0f0)
+- Discount pill changes to gray and shows 
+  "Expired" instead of percentage
+- Headline changes to "This offer has expired"
+- Subtext changes to "Fresh offers are generated 
+  every few minutes based on your context"
+- Show a new teal button: "🔄 Generate new offer"
+  which calls POST /api/offers/generate again
+- Small text below: "Offer valid for X minutes 
+  from generation time"
+
+This shows judges that offer lifecycle is 
+intentional and complete.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AFTER ALL 5 IMPROVEMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Verify the full demo flow still works:
+   context → offer generation → display → 
+   redeem → QR → merchant dashboard
+
+2. Confirm all 5 improvements are visible 
+   in the UI
+
+3. Then run these git commands to push 
+   updates to GitHub:
+   git add .
+   git commit -m "feat: add GDPR panel, UX explanation, 
+   city config, events signal, expiry flow"
+   git push origin main

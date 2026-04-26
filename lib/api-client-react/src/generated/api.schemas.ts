@@ -39,11 +39,28 @@ export interface MerchantDemand {
   status: MerchantDemandStatus;
 }
 
+export type LocalEventsExpectedFootfall =
+  (typeof LocalEventsExpectedFootfall)[keyof typeof LocalEventsExpectedFootfall];
+
+export const LocalEventsExpectedFootfall = {
+  high: "high",
+  normal: "normal",
+  low: "low",
+} as const;
+
+export interface LocalEvents {
+  hasNearbyEvent: boolean;
+  eventName: string | null;
+  expectedFootfall: LocalEventsExpectedFootfall;
+  distanceMeters: number;
+}
+
 export interface ContextState {
   weather: Weather;
   location: Location;
   time: TimeContext;
   merchantDemand: MerchantDemand;
+  events: LocalEvents;
   userBehavior: string;
 }
 

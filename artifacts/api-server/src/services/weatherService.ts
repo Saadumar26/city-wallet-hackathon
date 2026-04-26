@@ -1,4 +1,5 @@
 import { logger } from "../lib/logger";
+import { CITY_CONFIG } from "../config/cityConfig";
 
 interface Weather {
   temp: number;
@@ -16,7 +17,7 @@ export async function getStuttgartWeather(): Promise<Weather> {
   }
 
   try {
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=48.7758&lon=9.1829&appid=${key}&units=metric`;
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${CITY_CONFIG.lat}&lon=${CITY_CONFIG.lon}&appid=${key}&units=metric`;
     const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
     if (!res.ok) {
       logger.warn({ status: res.status }, "Weather API non-200");

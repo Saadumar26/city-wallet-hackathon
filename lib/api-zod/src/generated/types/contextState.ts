@@ -5,6 +5,7 @@
  * City Wallet API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { LocalEvents } from "./localEvents";
 import type { Location } from "./location";
 import type { MerchantDemand } from "./merchantDemand";
 import type { TimeContext } from "./timeContext";
@@ -15,5 +16,6 @@ export interface ContextState {
   location: Location;
   time: TimeContext;
   merchantDemand: MerchantDemand;
+  events: LocalEvents;
   userBehavior: string;
 }

@@ -34,12 +34,16 @@ export async function generateOffer(
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+    const eventsHint = context.events?.hasNearbyEvent
+      ? `\nNearby event: "${context.events.eventName}" (~${context.events.distanceMeters}m away, expected footfall: ${context.events.expectedFootfall}). When relevant, you may subtly reference this event in the headline or subtext.`
+      : "";
+
     const prompt = `You are an AI offer generator for a city wallet app.
 Generate a hyper-personalized offer based on this context.
 Respond ONLY with a valid JSON object, no markdown, no explanation.
 
 Context: ${JSON.stringify(context)}
-Merchant rules: ${JSON.stringify(rules)}
+Merchant rules: ${JSON.stringify(rules)}${eventsHint}
 
 Return exactly this JSON structure:
 {

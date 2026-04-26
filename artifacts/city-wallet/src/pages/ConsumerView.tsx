@@ -3,37 +3,43 @@ import { Link } from "wouter";
 import { MobileFrame } from "@/components/consumer/MobileFrame";
 import { OfferCard } from "@/components/consumer/OfferCard";
 import { QRModal } from "@/components/consumer/QRModal";
-import { 
-  useGetContext, 
-  useGenerateOffer, 
+import {
+  useGetContext,
+  useGenerateOffer,
   useListOffers,
   getGetContextQueryKey,
-  getListOffersQueryKey
+  getListOffersQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Cloud, MapPin, Clock, Info, ShieldCheck } from "lucide-react";
+import { Cloud, MapPin, Clock, Info, ShieldCheck, ChevronDown, CalendarDays } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RedeemResponse } from "@workspace/api-client-react";
 import miaAvatar from "@/assets/mia.png";
 import gradientBg from "@/assets/gradient-bg.png";
 
 export default function ConsumerView() {
   const queryClient = useQueryClient();
-  const { data: context, isLoading: isContextLoading } = useGetContext({ 
-    query: { queryKey: getGetContextQueryKey() } 
+  const { data: context, isLoading: isContextLoading } = useGetContext({
+    query: { queryKey: getGetContextQueryKey() },
   });
-  
+
   const generateOfferMutation = useGenerateOffer();
   const { data: offersList } = useListOffers({
-    query: { queryKey: getListOffersQueryKey() }
+    query: { queryKey: getListOffersQueryKey() },
   });
   const [generatedOffer, setGeneratedOffer] = useState<any>(null);
   const [hasTriggered, setHasTriggered] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [redeemData, setRedeemData] = useState<RedeemResponse | null>(null);
 
-  const currentOffer = generatedOffer ?? (offersList && offersList.length > 0 ? offersList[0] : null);
+  const currentOffer =
+    generatedOffer ?? (offersList && offersList.length > 0 ? offersList[0] : null);
 
   // Fetch initial offer on mount if none exist
   useEffect(() => {
@@ -53,7 +59,7 @@ export default function ConsumerView() {
       onSuccess: (data) => {
         setGeneratedOffer(data);
         queryClient.invalidateQueries({ queryKey: getListOffersQueryKey() });
-      }
+      },
     });
   };
 
@@ -71,7 +77,7 @@ export default function ConsumerView() {
             <img src={gradientBg} alt="" className="w-full h-full object-cover opacity-60" />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
           </div>
-          
+
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -105,6 +111,16 @@ export default function ConsumerView() {
                     <Clock className="w-3.5 h-3.5 text-amber-500" />
                     {context.time.period}
                   </div>
+                  {context.events?.hasNearbyEvent && (
+                    <div
+                      data-testid="chip-event"
+                      className="flex items-center gap-1.5 bg-background/80 backdrop-blur-md px-3 py-1.5 rounded-full border shadow-sm text-xs font-medium whitespace-nowrap"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-purple-500" />
+                      <CalendarDays className="w-3.5 h-3.5 text-purple-500" />
+                      {context.events.eventName}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -113,7 +129,7 @@ export default function ConsumerView() {
 
         {/* Main Offer Card */}
         <div className="px-6 mb-8 relative z-10 -mt-2">
-          {!currentOffer || generateOfferMutation.isPending && !currentOffer ? (
+          {!currentOffer || (generateOfferMutation.isPending && !currentOffer) ? (
             <div className="w-full h-[400px] rounded-[2rem] bg-card border shadow-sm p-6 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between mb-8">
@@ -137,8 +153,8 @@ export default function ConsumerView() {
               </div>
             </div>
           ) : (
-            <OfferCard 
-              offer={currentOffer} 
+            <OfferCard
+              offer={currentOffer}
               onRedeemSuccess={handleRedeemSuccess}
               onRegenerate={handleGenerateOffer}
               isRegenerating={generateOfferMutation.isPending}
@@ -146,20 +162,82 @@ export default function ConsumerView() {
           )}
         </div>
 
-        {/* What triggered this */}
+        {/* GDPR Privacy Panel */}
+        <div className="px-6 mb-6">
+          <Collapsible className="rounded-2xl overflow-hidden bg-muted/40 border-l-4 border-l-primary border border-border shadow-sm">
+            <CollapsibleTrigger
+              data-testid="trigger-privacy"
+              className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold hover:bg-muted/60 transition-colors group"
+            >
+              <span className="flex items-center gap-2">
+                <span aria-hidden>🔒</span>
+                Your privacy
+              </span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="px-4 pb-4 pt-1 text-sm text-muted-foreground space-y-2">
+              <p className="flex gap-2"><span aria-hidden>📍</span><span>Your precise location stays on your device</span></p>
+              <p className="flex gap-2"><span aria-hidden>🧠</span><span>Only an abstract intent signal is sent to our server (e.g. "browsing + cold weather")</span></p>
+              <p className="flex gap-2"><span aria-hidden>🚫</span><span>No personal movement data reaches the cloud</span></p>
+              <p className="flex gap-2"><span aria-hidden>✅</span><span>GDPR compliant by design</span></p>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+
+        {/* What triggered this — extended with UX Design tab */}
         {currentOffer && context && (
           <div className="px-6 mb-8">
             <Collapsible className="bg-card border rounded-2xl overflow-hidden shadow-sm">
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 font-medium text-sm hover:bg-muted/50 transition-colors">
+              <CollapsibleTrigger
+                data-testid="trigger-why"
+                className="flex items-center justify-between w-full p-4 font-medium text-sm hover:bg-muted/50 transition-colors group"
+              >
                 <div className="flex items-center gap-2">
                   <Info className="w-4 h-4 text-primary" />
                   Why am I seeing this?
                 </div>
+                <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent className="p-4 pt-0 text-sm text-muted-foreground border-t bg-muted/20">
-                <p className="leading-relaxed">
-                  It's <strong className="text-foreground font-semibold">{context.weather.temp}°C and {context.weather.condition.toLowerCase()}</strong> in {context.location.district}. {currentOffer.merchantName}'s traffic is unusually quiet right now, and our AI noticed you might appreciate a {currentOffer.tone} offer nearby.
-                </p>
+              <CollapsibleContent className="border-t bg-muted/20">
+                <Tabs defaultValue="context" className="w-full">
+                  <TabsList className="w-full grid grid-cols-2 rounded-none bg-transparent border-b h-auto p-0">
+                    <TabsTrigger
+                      value="context"
+                      className="rounded-none data-[state=active]:bg-background data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary py-2.5 text-xs"
+                    >
+                      Context
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="ux"
+                      className="rounded-none data-[state=active]:bg-background data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary py-2.5 text-xs"
+                    >
+                      UX Design
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="context" className="p-4 pt-3 text-sm text-muted-foreground mt-0">
+                    <p className="leading-relaxed">
+                      It's{" "}
+                      <strong className="text-foreground font-semibold">
+                        {context.weather.temp}°C and {context.weather.condition.toLowerCase()}
+                      </strong>{" "}
+                      in {context.location.district}.{" "}
+                      {context.events?.hasNearbyEvent && (
+                        <>
+                          <strong className="text-foreground font-semibold">{context.events.eventName}</strong>{" "}
+                          is nearby (~{context.events.distanceMeters}m, expected footfall {context.events.expectedFootfall}).{" "}
+                        </>
+                      )}
+                      {currentOffer.merchantName}'s traffic is unusually quiet right now, and our AI noticed
+                      you might appreciate a {currentOffer.tone} offer nearby.
+                    </p>
+                  </TabsContent>
+                  <TabsContent value="ux" className="p-4 pt-3 text-sm text-muted-foreground space-y-2.5 mt-0">
+                    <p className="flex gap-2"><span aria-hidden>📱</span><span><strong className="text-foreground font-semibold">Delivered as:</strong> In-app card — immediate, no lock-screen interruption needed</span></p>
+                    <p className="flex gap-2"><span aria-hidden>💬</span><span><strong className="text-foreground font-semibold">Tone:</strong> Emotional-situational, not factual — speaks to the moment, not the discount</span></p>
+                    <p className="flex gap-2"><span aria-hidden>⚡</span><span><strong className="text-foreground font-semibold">3-second read:</strong> merchant + discount + expiry visible instantly without scrolling</span></p>
+                    <p className="flex gap-2"><span aria-hidden>🔚</span><span><strong className="text-foreground font-semibold">Offer ends:</strong> Accept (QR generated), Dismiss (card fades), or Expiry (timer → 0)</span></p>
+                  </TabsContent>
+                </Tabs>
               </CollapsibleContent>
             </Collapsible>
           </div>
@@ -171,9 +249,8 @@ export default function ConsumerView() {
             <h3 className="font-semibold text-lg tracking-tight">Nearby offers</h3>
             <span className="text-xs font-medium text-muted-foreground">Based on location</span>
           </div>
-          
+
           <div className="space-y-3">
-            {/* Static Card 1 */}
             <div className="bg-card border rounded-2xl p-4 flex items-center gap-4 shadow-sm">
               <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-2xl shrink-0">
                 🥗
@@ -187,8 +264,7 @@ export default function ConsumerView() {
                 </div>
               </div>
             </div>
-            
-            {/* Static Card 2 */}
+
             <div className="bg-card border rounded-2xl p-4 flex items-center gap-4 shadow-sm">
               <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-2xl shrink-0">
                 📚
@@ -216,11 +292,7 @@ export default function ConsumerView() {
         </div>
       </div>
 
-      <QRModal 
-        open={qrModalOpen} 
-        onOpenChange={setQrModalOpen}
-        redeemData={redeemData}
-      />
+      <QRModal open={qrModalOpen} onOpenChange={setQrModalOpen} redeemData={redeemData} />
     </MobileFrame>
   );
 }

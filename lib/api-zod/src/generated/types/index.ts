@@ -8,6 +8,7 @@
 
 export * from "./contextState";
 export * from "./healthStatus";
+export * from "./localEvents";
 export * from "./location";
 export * from "./merchant";
 export * from "./merchantDashboard";

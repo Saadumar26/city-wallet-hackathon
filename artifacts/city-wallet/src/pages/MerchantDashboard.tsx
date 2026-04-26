@@ -116,6 +116,9 @@ export default function MerchantDashboard() {
                 </div>
               </h1>
               <p className="text-xs text-muted-foreground">{merchantData.address} • {today}</p>
+              <p className="text-[10px] text-muted-foreground/70 mt-0.5" data-testid="text-city-config">
+                City: {dashboard.context.location.city} · Change via cityConfig.ts
+              </p>
             </div>
           </div>
           

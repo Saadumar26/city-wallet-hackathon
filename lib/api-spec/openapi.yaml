@@ -222,6 +222,25 @@ components:
         - volume
         - status
 
+    LocalEvents:
+      type: object
+      properties:
+        hasNearbyEvent:
+          type: boolean
+        eventName:
+          type: string
+          nullable: true
+        expectedFootfall:
+          type: string
+          enum: [high, normal, low]
+        distanceMeters:
+          type: integer
+      required:
+        - hasNearbyEvent
+        - eventName
+        - expectedFootfall
+        - distanceMeters
+
     ContextState:
       type: object
       properties:
@@ -233,6 +252,8 @@ components:
           $ref: "#/components/schemas/TimeContext"
         merchantDemand:
           $ref: "#/components/schemas/MerchantDemand"
+        events:
+          $ref: "#/components/schemas/LocalEvents"
         userBehavior:
           type: string
       required:
@@ -240,6 +261,7 @@ components:
         - location
         - time
         - merchantDemand
+        - events
         - userBehavior
 
     Offer:
